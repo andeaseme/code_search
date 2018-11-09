@@ -16,7 +16,12 @@ def module_path_gen(root_dir):
             if info is not None and info.module_type == imp.PY_SOURCE:
                 yield path
 
-# import ast
-# for path in module_path_gen(DIR_ROOT):
-#     with open(path) as f:
-#         tree = ast.parse(f.read())
+import ast
+for path in module_path_gen(DIR_ROOT):
+    print path
+    with open(path) as f:
+        tree = ast.parse(f.read())
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef) or isinstance(node, ast.ClassDef):
+            if ast.get_docstring(node) is not None:
+                print ast.get_docstring(node)
