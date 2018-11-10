@@ -1,29 +1,11 @@
-/**
- * TODO: Try Highlighter
-    import React from "react";
-    import ReactDOM from "react-dom";
-    import Highlighter from "react-highlight-words";
-
-    ReactDOM.render(
-    <Highlighter
-        highlightClassName="YourHighlightClass"
-        searchWords={["and", "or", "the"]}
-        autoEscape={true}
-        textToHighlight="The dog is chasing the cat. Or perhaps they're just playing?"
-    />,
-    document.getElementById("root")
-    );
- */
 import { autobind } from 'core-decorators';
+import { inject, observer } from 'mobx-react';
 // import * as _ from 'lodash';
 import * as React from 'react';
 
 import {
     Button,
-    Card,
-    // CardActions,
-    CardText,
-    CardTitle,
+    TextField,
 } from 'react-md';
 
 import {
@@ -39,43 +21,26 @@ import {
     // ResetFilters,
     SearchBox,
     // SearchkitComponent,
-    SearchkitManager,
+    // SearchkitManager,
     SearchkitProvider,
     // SelectedFilters,
     // TermQuery,
 } from 'searchkit';
 
-const sk = new SearchkitManager('http://localhost:9200/oto_code/');
-const queryFields = ['content'];
+import ElasticSearchStore from './elasticSearchStore';
+import HitItem from './HitItem';
 
-const HitItem = (props) => {
-    console.log(JSON.stringify(props));
-    const title = props.result._source.name;
-    const subtitle = props.result._source.path;
-    const id = props.result._id;
-    const score = props.result._score;
-    const sourceContent = props.result._source.content;
+interface IProps {
+    elasticSearchStore?: ElasticSearchStore;
+}
 
-    return (
-        <Card>
-            <CardTitle
-                expander
-                title={title}
-                subtitle={subtitle}
-            />
-            <CardText expandable>
-                <div>
-                    <h6>{`id: ${id}`}</h6>
-                    <h6>{`score: ${score}`}</h6>
-                    {sourceContent}
-                </div>
-            </CardText>
-        </Card>
-    );
-};
-
+/**
+ * TODO: changing host in text field does not change the host used
+ */
 @autobind
-export default class ElasticSearch extends React.Component<any, any>  {
+@inject('elasticSearchStore')
+@observer
+export default class ElasticSearch extends React.Component<IProps, any>  {
     hitRef;
     constructor(props) {
         super(props);
@@ -85,11 +50,17 @@ export default class ElasticSearch extends React.Component<any, any>  {
     render() {
         return (
             <div>
-                <SearchkitProvider searchkit={sk}>
+                <TextField
+                    id="host-textfield"
+                    label="Host"
+                    value={this.props.elasticSearchStore.host}
+                    onChange={(host: string) => this.props.elasticSearchStore.host = host}
+                />
+                <SearchkitProvider searchkit={this.props.elasticSearchStore.searchkit}>
                     <div className="search_and_hit">
                         <SearchBox
                             queryBuilder={QueryString}
-                            queryFields={queryFields}
+                            queryFields={this.props.elasticSearchStore.queryFields}
                         />
                         <div className="hit_box">
                             <Hits
